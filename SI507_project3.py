@@ -16,11 +16,9 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app) # For database use
 session = db.session # to make queries easy
 
-
 #########
 ######### Everything above this line is important/useful setup, not problem-solving.
 #########
-
 
 ##### Set up Models #####
 
@@ -53,8 +51,8 @@ class Genre(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64))
 
-##### Helper functions #####
 
+##### Helper functions #####
 ### For database additions
 ### Relying on global session variable above existing
 
@@ -69,11 +67,11 @@ def get_or_create_director(director_name):
         return director
 
 def get_or_create_genre(genre_name):
-    genre = Genre.query.filter_by(genre=genre_name).first()
+    genre = Genre.query.filter_by(name=genre_name).first()
     if genre:
         return genre
     else:
-        genre = Genre(genre=genre_name)
+        genre = Genre(name=genre_name)
         session.add(genre)
         session.commit()
         return genre
@@ -105,18 +103,13 @@ def see_all():
     movies = Movie.query.all()
     for x in movies:
         director = Director.query.filter_by(id=x.director_name).first()
-        all_movies.append((x.title, x.director_name, x.movie_id))
+        all_movies.append((x.title, x.director_name, x.genre_name))
     return render_template('all_movies.html',all_movies=all_movies)
 
-@app.route('/all_directors')
-def see_all_artists():
-    directors = Director.query.all()
-    names = []
-    for d in directors:
-        num_movies = len(Movie.query.filter_by(director_name=d.name).all())
-        newtup = (d.name, num_movies)
-        names.append(newtup)
-    return render_template('all_directors.html',director_names=names)
+@app.route('/movies/<genre>')
+def see_genre(genre):
+    movie_list = Movie.query.filter_by(genre_name=genre).all()
+    return render_template('genres.html', movie_list=movie_list)
 
 if __name__ == '__main__':
     db.create_all() # This will create database in current directory, as set up, if it doesn't exist, but won't overwrite if you restart - so no worries about that
